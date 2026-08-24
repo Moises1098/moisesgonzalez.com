@@ -14,7 +14,7 @@ export default function Home() {
             </h1>
 
             <p className="mt-4 text-xl text-black dark:text-slate-900">
-              Welcome To My Online Portfolio Website
+              Welcome To My Portfolio Website
             </p>
           </div>
         </div>

@@ -21,7 +21,7 @@ import {
  * HOME PILL NAVIGATION
  * =========================================================
  *
- * Home is intentionally NOT included here.
+ * Home is NOT included in the pill.
  */
 
 const navigation = [
@@ -36,7 +36,7 @@ const navigation = [
  * DEFAULT NAVIGATION
  * =========================================================
  *
- * Home is included here.
+ * Home IS included in the default navbar.
  */
 
 const defaultNavigation = [
@@ -46,7 +46,7 @@ const defaultNavigation = [
 
 /*
  * =========================================================
- * MORPH SETTINGS
+ * ANIMATION SETTINGS
  * =========================================================
  */
 
@@ -61,34 +61,64 @@ export default function Navbar() {
 
   const isHome = pathname === "/";
 
+  /*
+   * Navbar visibility.
+   */
   const [hidden, setHidden] = useState(false);
 
   /*
-   * Mobile menu state.
-   *
-   * Starts CLOSED.
+   * Mobile menu starts CLOSED.
    */
   const [mobileOpen, setMobileOpen] = useState(false);
 
   /*
-   * Close mobile menu whenever the route changes.
+   * =========================================================
+   * RESET MOBILE MENU WHEN PAGE CHANGES
+   * =========================================================
    */
+
   useEffect(() => {
     setMobileOpen(false);
+
+    /*
+     * Make sure the navbar is visible after navigation.
+     */
+    setHidden(false);
   }, [pathname]);
 
   /*
    * =========================================================
-   * HIDE NAVBAR WHEN SCROLLING DOWN
+   * SCROLL DIRECTION
    * =========================================================
+   *
+   * Down:
+   *   Hide after 50px.
+   *
+   * Up:
+   *   Reveal.
+   *
+   * We intentionally do NOT automatically reveal the navbar
+   * just because the scroll position is below 50px.
    */
 
   useMotionValueEvent(scrollY, "change", (current) => {
-    const previous = scrollY.getPrevious() ?? 0;
+    const previous = scrollY.getPrevious() ?? current;
 
-    if (current > previous && current > 150) {
+    const scrollingDown = current > previous;
+    const scrollingUp = current < previous;
+
+    /*
+     * Hide once the user has scrolled down enough.
+     */
+    if (scrollingDown && current > 50) {
       setHidden(true);
-    } else {
+      return;
+    }
+
+    /*
+     * Reveal when the user starts scrolling upward.
+     */
+    if (scrollingUp) {
       setHidden(false);
     }
   });
@@ -112,12 +142,24 @@ export default function Navbar() {
         top-0
         z-50
       "
+
+      /*
+       * =====================================================
+       * HIDE / SHOW ANIMATION
+       * =====================================================
+       *
+       * Instead of shooting -140px upward, the navbar
+       * gently floats away.
+       */
+
       animate={{
-        y: hidden ? -140 : 0,
+        y: hidden ? -90 : 0,
+        opacity: hidden ? 0 : 1,
       }}
+
       transition={{
-        duration: 0.35,
-        ease: morphEase,
+        duration: 0.45,
+        ease: [0.22, 1, 0.36, 1],
       }}
     >
 
@@ -129,6 +171,7 @@ export default function Navbar() {
 
       <motion.nav
         initial={false}
+
         className="
           pointer-events-auto
           absolute
@@ -136,31 +179,31 @@ export default function Navbar() {
           overflow-hidden
           shadow-lg
         "
+
         style={{
           x: "-50%",
         }}
 
         /*
          * ===================================================
-         * START / END STATES
+         * ONE PHYSICAL NAVBAR
          * ===================================================
          *
          * HOME:
          *
-         *   width        → 700px
-         *   top          → 24px
-         *   radius       → pill
-         *   color        → white
+         *   width        = 700px
+         *   top          = 24px
+         *   radius       = pill
+         *   color        = white
          *
          * DEFAULT:
          *
-         *   width        → 100vw
-         *   top          → 0
-         *   radius       → square
-         *   color        → navy
+         *   width        = 100vw
+         *   top          = 0
+         *   radius       = square
+         *   color        = navy
          *
-         * Motion interpolates these values on the SAME
-         * physical navbar element.
+         * This is ALWAYS the same <motion.nav>.
          */
 
         animate={{
@@ -179,11 +222,11 @@ export default function Navbar() {
 
         /*
          * ===================================================
-         * MORPH TRANSITION
+         * MORPH
          * ===================================================
          *
-         * Width, position, corners and color all start
-         * and finish together.
+         * All four physical properties use the SAME
+         * duration and easing so they move together.
          */
 
         transition={{
@@ -220,6 +263,7 @@ export default function Navbar() {
             opacity: isHome ? 1 : 0,
             scale: isHome ? 1 : 0.96,
           }}
+
           transition={{
             duration: 0.2,
             ease: "easeOut",
@@ -318,7 +362,7 @@ export default function Navbar() {
         >
 
           {/* ================================================= */}
-          {/* MAIN NAVIGATION ROW                               */}
+          {/* MAIN ROW                                          */}
           {/* ================================================= */}
 
           <div
@@ -389,7 +433,7 @@ export default function Navbar() {
 
 
             {/* ================================================= */}
-            {/* MOBILE HAMBURGER                                  */}
+            {/* MOBILE BUTTON                                     */}
             {/* ================================================= */}
 
             <button
