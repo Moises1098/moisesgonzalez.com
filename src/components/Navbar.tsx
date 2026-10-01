@@ -1,550 +1,459 @@
 "use client";
 
-import {
-  motion,
-  AnimatePresence,
-  useScroll,
-  useMotionValueEvent,
-} from "motion/react";
-
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
-
+import { usePathname } from "next/navigation";
 import {
-  Bars3Icon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
-
-/*
- * =========================================================
- * HOME PILL NAVIGATION
- * =========================================================
- *
- * Home is NOT included in the pill.
- */
-
-const navigation = [
-  { name: "About", href: "/about" },
-  { name: "Projects", href: "/projects" },
-  { name: "Resume", href: "/resume" },
-  { name: "Contact", href: "/contact" },
-];
-
-/*
- * =========================================================
- * DEFAULT NAVIGATION
- * =========================================================
- *
- * Home IS included in the default navbar.
- */
-
-const defaultNavigation = [
-  { name: "Home", href: "/" },
-  ...navigation,
-];
-
-/*
- * =========================================================
- * ANIMATION SETTINGS
- * =========================================================
- */
-
-const morphDuration = 0.85;
-
-const morphEase = [0.22, 1, 0.36, 1] as const;
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useScroll,
+} from "motion/react";
+import { useState } from "react";
+import "./Navbar.css";
+import { useTheme } from "./LightandDarkmode";
 
 export default function Navbar() {
   const pathname = usePathname();
 
-  const { scrollY } = useScroll();
-
-  const isHome = pathname === "/";
-
-  /*
-   * Navbar visibility.
-   */
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
 
-  /*
-   * Mobile menu starts CLOSED.
-   */
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const { scrollY } = useScroll();
 
   /*
-   * =========================================================
-   * RESET MOBILE MENU WHEN PAGE CHANGES
-   * =========================================================
-   */
+    NAVBAR SCROLL BEHAVIOR
 
-  useEffect(() => {
-    setMobileOpen(false);
-
-    /*
-     * Make sure the navbar is visible after navigation.
-     */
-    setHidden(false);
-  }, [pathname]);
-
-  /*
-   * =========================================================
-   * SCROLL DIRECTION
-   * =========================================================
-   *
-   * Down:
-   *   Hide after 50px.
-   *
-   * Up:
-   *   Reveal.
-   *
-   * We intentionally do NOT automatically reveal the navbar
-   * just because the scroll position is below 50px.
-   */
-
+    - Stay visible near the top of the page.
+    - Hide when scrolling down past 150px.
+    - Show again as soon as the user scrolls up.
+  */
   useMotionValueEvent(scrollY, "change", (current) => {
-    const previous = scrollY.getPrevious() ?? current;
+    const previous = scrollY.getPrevious() ?? 0;
 
-    const scrollingDown = current > previous;
-    const scrollingUp = current < previous;
-
-    /*
-     * Hide once the user has scrolled down enough.
-     */
-    if (scrollingDown && current > 50) {
+    if (current > previous && current > 150) {
       setHidden(true);
-      return;
-    }
-
-    /*
-     * Reveal when the user starts scrolling upward.
-     */
-    if (scrollingUp) {
+    } else {
       setHidden(false);
     }
   });
 
-  /*
-   * =========================================================
-   * NAVIGATION HANDLER
-   * =========================================================
-   */
-
-  const handleNavigation = () => {
-    setMobileOpen(false);
-  };
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "About", href: "/about" },
+    { name: "Projects", href: "/projects" },
+    { name: "Experience", href: "/experience" },
+    { name: "Contact", href: "/contact" },
+  ];
 
   return (
-    <motion.header
-      className="
-        pointer-events-none
-        fixed
-        inset-x-0
-        top-0
-        z-50
-      "
-
-      /*
-       * =====================================================
-       * HIDE / SHOW ANIMATION
-       * =====================================================
-       *
-       * Instead of shooting -140px upward, the navbar
-       * gently floats away.
-       */
-
+    <motion.nav
+      className="portfolio-navbar"
       animate={{
-        y: hidden ? -90 : 0,
-        opacity: hidden ? 0 : 1,
+        y: hidden && !mobileMenuOpen ? -140 : 0,
+        opacity: hidden && !mobileMenuOpen ? 0 : 1,
       }}
-
       transition={{
-        duration: 0.45,
-        ease: [0.22, 1, 0.36, 1],
+        duration: 0.3,
+        ease: "easeInOut",
       }}
     >
+      {/* DESKTOP NAVBAR */}
+      <div className="desktop-navbar">
+        <div className="navbar-bar">
+          <img
+            src="/NavBar-BG.png"
+            alt=""
+            className="navbar-background"
+          />
 
-      {/* ===================================================== */}
-      {/*                                                       */}
-      {/*                 ONE NAVBAR SHELL                      */}
-      {/*                                                       */}
-      {/* ===================================================== */}
+          <div className="navbar-dark-overlay" />
+          <div className="navbar-glass-highlight" />
+          <div className="navbar-inner-border" />
 
-      <motion.nav
-        initial={false}
+          <div className="navbar-content">
+            {/* LEFT */}
+            <div className="navbar-left">
+              <div className="profile-container">
+                <Image
+                  src="/Profile.png"
+                  alt="Moises Gonzalez"
+                  fill
+                  sizes="52px"
+                  priority
+                  className="profile-image"
+                />
+              </div>
 
-        className="
-          pointer-events-auto
-          absolute
-          left-1/2
-          overflow-hidden
-          shadow-lg
-        "
+              <span className="navbar-divider" />
 
-        style={{
-          x: "-50%",
-        }}
-
-        /*
-         * ===================================================
-         * ONE PHYSICAL NAVBAR
-         * ===================================================
-         *
-         * HOME:
-         *
-         *   width        = 700px
-         *   top          = 24px
-         *   radius       = pill
-         *   color        = white
-         *
-         * DEFAULT:
-         *
-         *   width        = 100vw
-         *   top          = 0
-         *   radius       = square
-         *   color        = navy
-         *
-         * This is ALWAYS the same <motion.nav>.
-         */
-
-        animate={{
-          width: isHome
-            ? "min(700px, calc(100vw - 2rem))"
-            : "100vw",
-
-          top: isHome ? 24 : 0,
-
-          borderRadius: isHome ? 9999 : 0,
-
-          backgroundColor: isHome
-            ? "#ffffff"
-            : "#0f172a",
-        }}
-
-        /*
-         * ===================================================
-         * MORPH
-         * ===================================================
-         *
-         * All four physical properties use the SAME
-         * duration and easing so they move together.
-         */
-
-        transition={{
-          width: {
-            duration: morphDuration,
-            ease: morphEase,
-          },
-
-          top: {
-            duration: morphDuration,
-            ease: morphEase,
-          },
-
-          borderRadius: {
-            duration: morphDuration,
-            ease: morphEase,
-          },
-
-          backgroundColor: {
-            duration: morphDuration,
-            ease: morphEase,
-          },
-        }}
-      >
-
-        {/* ================================================= */}
-        {/*                                                   */}
-        {/*                 HOME PILL CONTENT                 */}
-        {/*                                                   */}
-        {/* ================================================= */}
-
-        <motion.div
-          animate={{
-            opacity: isHome ? 1 : 0,
-            scale: isHome ? 1 : 0.96,
-          }}
-
-          transition={{
-            duration: 0.2,
-            ease: "easeOut",
-          }}
-
-          className="
-            absolute
-            inset-0
-            flex
-            items-center
-            justify-center
-            gap-[clamp(1rem,5vw,2.5rem)]
-            px-6
-          "
-
-          style={{
-            pointerEvents: isHome ? "auto" : "none",
-          }}
-        >
-
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={handleNavigation}
-
-              className="
-                group
-                relative
-                whitespace-nowrap
-
-                text-[clamp(1rem,2vw,1.125rem)]
-                font-medium
-                text-black
-
-                transition-all
-                duration-300
-
-                hover:text-cyan-950
-
-                hover:[text-shadow:
-                  0_0_5px_#22d3ee,
-                  0_0_15px_#22d3ee,
-                  0_0_30px_#22d3ee
-                ]
-
-                after:absolute
-                after:-bottom-1
-                after:left-1/2
-                after:h-[2px]
-                after:w-0
-                after:-translate-x-1/2
-
-                after:bg-cyan-950
-                after:shadow-[0_0_8px_#22d3ee]
-
-                after:transition-all
-                after:duration-300
-
-                hover:after:w-full
-              "
-            >
-              {item.name}
-            </Link>
-          ))}
-
-        </motion.div>
-
-
-        {/* ================================================= */}
-        {/*                                                   */}
-        {/*              DEFAULT NAVBAR CONTENT               */}
-        {/*                                                   */}
-        {/* ================================================= */}
-
-        <motion.div
-          animate={{
-            opacity: isHome ? 0 : 1,
-            scale: isHome ? 0.96 : 1,
-          }}
-
-          transition={{
-            duration: 0.2,
-            ease: "easeOut",
-          }}
-
-          className="
-            relative
-            w-full
-            text-white
-          "
-
-          style={{
-            pointerEvents: isHome ? "none" : "auto",
-          }}
-        >
-
-          {/* ================================================= */}
-          {/* MAIN ROW                                          */}
-          {/* ================================================= */}
-
-          <div
-            className="
-              flex
-              min-h-[72px]
-              w-full
-              items-center
-              justify-between
-              px-6
-              py-4
-            "
-          >
-
-            {/* ================================================= */}
-            {/* NAME                                              */}
-            {/* ================================================= */}
-
-            <Link
-              href="/"
-              onClick={handleNavigation}
-
-              className="
-                text-xl
-                font-bold
-                text-white
-              "
-            >
-              Moises Gonzalez
-            </Link>
-
-
-            {/* ================================================= */}
-            {/* DESKTOP NAVIGATION                                */}
-            {/* ================================================= */}
-
-            <div
-              className="
-                hidden
-                items-center
-                gap-6
-                md:flex
-              "
-            >
-
-              {defaultNavigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={handleNavigation}
-
-                  className="
-                    text-lg
-                    font-medium
-                    text-white
-
-                    transition-colors
-                    duration-200
-
-                    hover:text-slate-300
-                  "
-                >
-                  {item.name}
-                </Link>
-              ))}
-
+              <span className="navbar-name">
+                Moises Gonzalez
+              </span>
             </div>
 
+            {/* CENTER */}
+            <div
+              className="navbar-links"
+              onMouseLeave={() => setHoveredLink(null)}
+            >
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
 
-            {/* ================================================= */}
-            {/* MOBILE BUTTON                                     */}
-            {/* ================================================= */}
+                const showIndicator =
+                  hoveredLink === link.href ||
+                  (hoveredLink === null && isActive);
 
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onMouseEnter={() =>
+                      setHoveredLink(link.href)
+                    }
+                    className={`navbar-link ${
+                      isActive ? "navbar-link-active" : ""
+                    }`}
+                  >
+                    {link.name}
+
+                    {showIndicator && (
+                      <motion.div
+                        layoutId="navbar-indicator"
+                        className="navbar-indicator"
+                        transition={{
+                          type: "spring",
+                          stiffness: 450,
+                          damping: 35,
+                        }}
+                      >
+                        <div className="navbar-indicator-line" />
+                        <div className="navbar-indicator-dot" />
+                      </motion.div>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* RIGHT */}
+            <div className="navbar-right">
+              <Link
+                href="/resume.pdf"
+                target="_blank"
+                className="resume-button"
+              >
+                Resume
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 3v12" />
+                  <path d="m7 10 5 5 5-5" />
+                  <path d="M5 21h14" />
+                </svg>
+              </Link>
+
+              <span className="navbar-divider" />
+
+              {/* DESKTOP THEME BUTTON */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={
+                  theme === "light"
+                    ? "Switch to dark mode"
+                    : "Switch to light mode"
+                }
+                className="theme-button"
+              >
+                {theme === "light" ? (
+                  /* SUN */
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="m4.93 4.93 1.41 1.41" />
+                    <path d="m17.66 17.66 1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="m6.34 17.66-1.41 1.41" />
+                    <path d="m19.07 4.93-1.41 1.41" />
+                  </svg>
+                ) : (
+                  /* MOON */
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MOBILE NAVBAR */}
+      <div className="mobile-navbar">
+        <div
+          className={`mobile-navbar-bar ${
+            mobileMenuOpen ? "mobile-navbar-open" : ""
+          }`}
+        >
+          <img
+            src="/NavBar-BG.png"
+            alt=""
+            className="navbar-background"
+          />
+
+          <div className="navbar-dark-overlay" />
+          <div className="navbar-glass-highlight" />
+          <div className="navbar-inner-border" />
+
+          <div className="mobile-navbar-content">
+            {/* MOBILE PROFILE */}
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-profile-section"
+            >
+              <div className="profile-container">
+                <Image
+                  src="/Profile.png"
+                  alt="Moises Gonzalez"
+                  fill
+                  sizes="52px"
+                  priority
+                  className="profile-image"
+                />
+              </div>
+
+              <span className="mobile-navbar-name">
+                Moises Gonzalez
+              </span>
+            </Link>
+
+            {/* HAMBURGER */}
             <button
               type="button"
-
-              onClick={() =>
-                setMobileOpen((open) => !open)
-              }
-
-              className="
-                rounded-md
-                p-2
-                text-white
-
-                transition-colors
-
-                hover:bg-white/10
-
-                md:hidden
-              "
-
               aria-label={
-                mobileOpen
+                mobileMenuOpen
                   ? "Close navigation menu"
                   : "Open navigation menu"
               }
-
-              aria-expanded={mobileOpen}
+              aria-expanded={mobileMenuOpen}
+              onClick={() =>
+                setMobileMenuOpen((open) => !open)
+              }
+              className="hamburger-button"
             >
+              <div className="hamburger">
+                <motion.span
+                  animate={{
+                    rotate: mobileMenuOpen ? 45 : 0,
+                    y: mobileMenuOpen ? 9 : 0,
+                  }}
+                  transition={{
+                    duration: 0.25,
+                  }}
+                />
 
-              {mobileOpen ? (
-                <XMarkIcon className="size-6" />
-              ) : (
-                <Bars3Icon className="size-6" />
-              )}
+                <motion.span
+                  animate={{
+                    opacity: mobileMenuOpen ? 0 : 1,
+                    scaleX: mobileMenuOpen ? 0 : 1,
+                  }}
+                  transition={{
+                    duration: 0.2,
+                  }}
+                />
 
+                <motion.span
+                  animate={{
+                    rotate: mobileMenuOpen ? -45 : 0,
+                    y: mobileMenuOpen ? -9 : 0,
+                  }}
+                  transition={{
+                    duration: 0.25,
+                  }}
+                />
+              </div>
             </button>
-
           </div>
+        </div>
 
+        {/* MOBILE DROPDOWN */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              className="mobile-dropdown"
+              initial={{
+                opacity: 0,
+                y: -8,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                y: -8,
+              }}
+              transition={{
+                duration: 0.22,
+                ease: "easeOut",
+              }}
+            >
+              <img
+                src="/NavBar-BG.png"
+                alt=""
+                className="dropdown-background"
+              />
 
-          {/* ================================================= */}
-          {/* MOBILE MENU                                       */}
-          {/* ================================================= */}
+              <div className="dropdown-dark-overlay" />
 
-          <AnimatePresence initial={false}>
+              <div className="dropdown-content">
+                {/* MOBILE LINKS */}
+                {navLinks.map((link) => {
+                  const isActive = pathname === link.href;
 
-            {mobileOpen && (
-              <motion.div
-                initial={{
-                  height: 0,
-                  opacity: 0,
-                }}
-
-                animate={{
-                  height: "auto",
-                  opacity: 1,
-                }}
-
-                exit={{
-                  height: 0,
-                  opacity: 0,
-                }}
-
-                transition={{
-                  duration: 0.3,
-                  ease: morphEase,
-                }}
-
-                className="
-                  overflow-hidden
-                  px-6
-                  pb-4
-                  md:hidden
-                "
-              >
-
-                <div className="flex flex-col space-y-1">
-
-                  {defaultNavigation.map((item) => (
+                  return (
                     <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={handleNavigation}
-
-                      className="
-                        rounded-md
-                        px-3
-                        py-2
-                        text-white
-
-                        transition-colors
-
-                        hover:bg-white/10
-                      "
+                      key={link.href}
+                      href={link.href}
+                      onClick={() =>
+                        setMobileMenuOpen(false)
+                      }
+                      className={`mobile-nav-link ${
+                        isActive
+                          ? "mobile-nav-link-active"
+                          : ""
+                      }`}
                     >
-                      {item.name}
+                      <span>{link.name}</span>
+
+                      {isActive && (
+                        <span className="mobile-active-dot" />
+                      )}
                     </Link>
-                  ))}
+                  );
+                })}
 
-                </div>
+                <div className="mobile-divider" />
 
-              </motion.div>
-            )}
+                {/* MOBILE RESUME */}
+                <Link
+                  href="/resume.pdf"
+                  target="_blank"
+                  onClick={() =>
+                    setMobileMenuOpen(false)
+                  }
+                  className="mobile-resume-button"
+                >
+                  Resume
 
-          </AnimatePresence>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 3v12" />
+                    <path d="m7 10 5 5 5-5" />
+                    <path d="M5 21h14" />
+                  </svg>
+                </Link>
 
-        </motion.div>
+                {/* MOBILE THEME */}
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  aria-label={
+                    theme === "light"
+                      ? "Switch to dark mode"
+                      : "Switch to light mode"
+                  }
+                  className="mobile-theme-button"
+                >
+                  {theme === "light" ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="4" />
+                      <path d="M12 2v2" />
+                      <path d="M12 20v2" />
+                      <path d="m4.93 4.93 1.41 1.41" />
+                      <path d="m17.66 17.66 1.41 1.41" />
+                      <path d="M2 12h2" />
+                      <path d="M20 12h2" />
+                      <path d="m6.34 17.66-1.41 1.41" />
+                      <path d="m19.07 4.93-1.41 1.41" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+                    </svg>
+                  )}
 
-      </motion.nav>
-
-    </motion.header>
+                  {theme === "light" ? "Dark Mode" : "Light Mode"}
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.nav>
   );
 }
