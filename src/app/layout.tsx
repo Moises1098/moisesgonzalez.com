@@ -3,6 +3,7 @@ import { Space_Grotesk } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import LightandDarkmode from "@/components/LightandDarkmode";
 import ThemeToggle from "@/components/ThemeToggle";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -45,7 +46,10 @@ export default function RootLayout({
       <body>
         <LightandDarkmode>
           <Navbar />
+
           {children}
+
+          <Footer />
           <ThemeToggle />
         </LightandDarkmode>
       </body>
