@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-/*
-  Tell Tailwind that dark: styles should activate
-  whenever <html> has the class "dark".
-*/
 @custom-variant dark (&:where(.dark, .dark *));
 
 
@@ -24,7 +20,7 @@
 ========================= */
 
 html.dark {
-  --background: #071226;
+  --background: #030a12;
   --foreground: #ededed;
 
   color-scheme: dark;
@@ -45,7 +41,7 @@ body {
   background: var(--background);
   color: var(--foreground);
 
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;
 
   transition:
     background-color 0.5s ease,
