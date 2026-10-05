@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -8,452 +7,1111 @@ import {
   motion,
   useMotionValueEvent,
   useScroll,
+  useTransform,
 } from "motion/react";
-import { useState } from "react";
-import "./Navbar.css";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { useTheme } from "./LightandDarkmode";
+import ECGAnimation, { type LinkGeometry } from "./ECGanimation";
+
+const links = [
+  { name: "Home", href: "/" },
+  { name: "About", href: "/about" },
+  { name: "Builds", href: "/builds" },
+  { name: "Research", href: "/research" },
+  { name: "Resume", href: "/resume" },
+];
+
+const ECG_TIME = 1800;
+const LINE_OFFSET = 10;
+const LINE_PAD = 6;
+const MOBILE_BREAKPOINT = 768;
+
+const COMPACT_DISTANCE = 140;
+const HIDE_AFTER = 160;
+const SCROLL_TOLERANCE = 2;
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { theme } = useTheme();
+  const dark = theme === "dark";
 
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
+  const textRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const animationId = useRef(0);
 
-  const { theme, toggleTheme } = useTheme();
+  const [geometry, setGeometry] = useState<LinkGeometry[]>([]);
+  const [navSize, setNavSize] = useState({ width: 680, height: 60 });
+  const [hovered, setHovered] = useState<number | null>(null);
+  const [animating, setAnimating] = useState<number | null>(null);
+  const [animationKey, setAnimationKey] = useState(0);
+
+  const [mobile, setMobile] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
+
   const { scrollY } = useScroll();
 
   /*
-    NAVBAR SCROLL BEHAVIOR
+    These respond continuously to scroll position.
 
-    - Stay visible near the top of the page.
-    - Hide when scrolling down past 150px.
-    - Show again as soon as the user scrolls up.
+    0px:
+      scale = 1
+      opacity/tint = lighter
+
+    140px:
+      scale = .965
+      glass = stronger
   */
-  useMotionValueEvent(scrollY, "change", (current) => {
-    const previous = scrollY.getPrevious() ?? 0;
+  const desktopScale = useTransform(
+    scrollY,
+    [0, COMPACT_DISTANCE],
+    [1, 0.965]
+  );
 
-    if (current > previous && current > 150) {
-      setHidden(true);
+  const mobileScale = useTransform(
+    scrollY,
+    [0, COMPACT_DISTANCE],
+    [1, 0.975]
+  );
+
+  const active = links.findIndex((link) =>
+    link.href === "/"
+      ? pathname === "/"
+      : pathname.startsWith(link.href)
+  );
+
+  const currentName = links[active]?.name ?? "Menu";
+  const visualActive = animating ?? active;
+
+  /* ======================================================
+     SCROLL DIRECTION
+  ====================================================== */
+
+  useMotionValueEvent(scrollY, "change", (current) => {
+    /*
+      Never hide the navbar while the mobile menu is open.
+    */
+    if (menuOpen) {
+      setNavVisible(true);
+      return;
+    }
+
+    const previous = scrollY.getPrevious() ?? current;
+    const difference = current - previous;
+
+    /*
+      Always visible near the top.
+
+      This gives us the "stick for a little" behavior.
+    */
+    if (current < HIDE_AFTER) {
+      setNavVisible(true);
+      return;
+    }
+
+    /*
+      Ignore extremely tiny changes so trackpads don't
+      make the navbar jitter.
+    */
+    if (Math.abs(difference) < SCROLL_TOLERANCE) return;
+
+    if (difference > 0) {
+      setNavVisible(false);
     } else {
-      setHidden(false);
+      setNavVisible(true);
     }
   });
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "About", href: "/about" },
-    { name: "Projects", href: "/projects" },
-    { name: "Experience", href: "/experience" },
-    { name: "Contact", href: "/contact" },
-  ];
+  /* ======================================================
+     ECG MEASUREMENTS
+  ====================================================== */
 
-  return (
-    <motion.nav
-      className="portfolio-navbar"
-      animate={{
-        y: hidden && !mobileMenuOpen ? -140 : 0,
-        opacity: hidden && !mobileMenuOpen ? 0 : 1,
-      }}
-      transition={{
-        duration: 0.3,
-        ease: "easeInOut",
-      }}
-    >
-      {/* DESKTOP NAVBAR */}
-      <div className="desktop-navbar">
-        <div className="navbar-bar">
-          <img
-            src="/NavBar-BG.png"
-            alt=""
-            className="navbar-background"
-          />
+  const measure = useCallback(() => {
+    const nav = navRef.current;
+    if (!nav) return;
 
-          <div className="navbar-dark-overlay" />
-          <div className="navbar-glass-highlight" />
-          <div className="navbar-inner-border" />
+    const navRect = nav.getBoundingClientRect();
 
-          <div className="navbar-content">
-            {/* LEFT */}
-            <div className="navbar-left">
-              <div className="profile-container">
-                <Image
-                  src="/Profile.png"
-                  alt="Moises Gonzalez"
-                  fill
-                  sizes="52px"
-                  priority
-                  className="profile-image"
-                />
-              </div>
+    const measurements = links.map((_, index): LinkGeometry | null => {
+      const el = textRefs.current[index];
+      if (!el) return null;
 
-              <span className="navbar-divider" />
+      const rect = el.getBoundingClientRect();
+      const left = rect.left - navRect.left;
 
-              <span className="navbar-name">
-                Moises Gonzalez
-              </span>
-            </div>
+      return {
+        left,
+        right: rect.right - navRect.left,
+        center: left + rect.width / 2,
+        baselineY: rect.bottom - navRect.top + LINE_OFFSET,
+      };
+    });
 
-            {/* CENTER */}
-            <div
-              className="navbar-links"
-              onMouseLeave={() => setHoveredLink(null)}
-            >
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href;
+    if (measurements.some((item) => item === null)) return;
 
-                const showIndicator =
-                  hoveredLink === link.href ||
-                  (hoveredLink === null && isActive);
+    setGeometry(measurements as LinkGeometry[]);
 
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onMouseEnter={() =>
-                      setHoveredLink(link.href)
-                    }
-                    className={`navbar-link ${
-                      isActive ? "navbar-link-active" : ""
-                    }`}
-                  >
-                    {link.name}
+    setNavSize({
+      width: navRect.width,
+      height: navRect.height,
+    });
+  }, []);
 
-                    {showIndicator && (
-                      <motion.div
-                        layoutId="navbar-indicator"
-                        className="navbar-indicator"
-                        transition={{
-                          type: "spring",
-                          stiffness: 450,
-                          damping: 35,
-                        }}
-                      >
-                        <div className="navbar-indicator-line" />
-                        <div className="navbar-indicator-dot" />
-                      </motion.div>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+  /* ======================================================
+     RESPONSIVE
+  ====================================================== */
 
-            {/* RIGHT */}
-            <div className="navbar-right">
-              <Link
-                href="/resume.pdf"
-                target="_blank"
-                className="resume-button"
-              >
-                Resume
+  useEffect(() => {
+    const query = window.matchMedia(
+      `(max-width: ${MOBILE_BREAKPOINT}px)`
+    );
 
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="17"
-                  height="17"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 3v12" />
-                  <path d="m7 10 5 5 5-5" />
-                  <path d="M5 21h14" />
-                </svg>
-              </Link>
+    const update = () => {
+      setMobile(query.matches);
 
-              <span className="navbar-divider" />
+      if (!query.matches) {
+        setMenuOpen(false);
+      }
+    };
 
-              {/* DESKTOP THEME BUTTON */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label={
-                  theme === "light"
-                    ? "Switch to dark mode"
-                    : "Switch to light mode"
-                }
-                className="theme-button"
-              >
-                {theme === "light" ? (
-                  /* SUN */
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v2" />
-                    <path d="M12 20v2" />
-                    <path d="m4.93 4.93 1.41 1.41" />
-                    <path d="m17.66 17.66 1.41 1.41" />
-                    <path d="M2 12h2" />
-                    <path d="M20 12h2" />
-                    <path d="m6.34 17.66-1.41 1.41" />
-                    <path d="m19.07 4.93-1.41 1.41" />
-                  </svg>
-                ) : (
-                  /* MOON */
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    update();
+    query.addEventListener("change", update);
 
-      {/* MOBILE NAVBAR */}
-      <div className="mobile-navbar">
-        <div
-          className={`mobile-navbar-bar ${
-            mobileMenuOpen ? "mobile-navbar-open" : ""
-          }`}
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!mobile) measure();
+  }, [mobile, measure]);
+
+  useEffect(() => {
+    const nav = navRef.current;
+
+    if (!nav || mobile) return;
+
+    const observer = new ResizeObserver(measure);
+
+    observer.observe(nav);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [mobile, measure]);
+
+  useLayoutEffect(() => {
+    if (!mobile) {
+      requestAnimationFrame(measure);
+    }
+  }, [pathname, mobile, measure]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  /*
+    Prevent scrolling behind the full-screen mobile menu.
+  */
+  useEffect(() => {
+    if (!mobile || !menuOpen) return;
+
+    const oldOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = oldOverflow;
+    };
+  }, [mobile, menuOpen]);
+
+  /* ======================================================
+     ECG
+  ====================================================== */
+
+  const playECG = (index: number) => {
+    const id = ++animationId.current;
+
+    setHovered(null);
+    setAnimating(null);
+    setAnimationKey((key) => key + 1);
+
+    requestAnimationFrame(() => {
+      if (animationId.current === id) {
+        setAnimating(index);
+      }
+    });
+
+    window.setTimeout(() => {
+      if (animationId.current === id) {
+        setAnimating(null);
+      }
+    }, ECG_TIME);
+  };
+
+  /* ======================================================
+     GLASS
+  ====================================================== */
+
+  const glass: CSSProperties = {
+    background: dark
+      ? "linear-gradient(135deg, rgba(120,175,220,.13), rgba(70,120,165,.055))"
+      : "linear-gradient(135deg, rgba(235,248,255,.48), rgba(185,220,245,.20))",
+
+    backdropFilter:
+      "blur(30px) saturate(180%) brightness(1.08)",
+
+    WebkitBackdropFilter:
+      "blur(30px) saturate(180%) brightness(1.08)",
+
+    border: dark
+      ? "1px solid rgba(205,235,255,.14)"
+      : "1px solid rgba(255,255,255,.55)",
+
+    boxShadow: dark
+      ? `
+          0 18px 45px rgba(0,0,0,.22),
+          0 4px 14px rgba(0,0,0,.10),
+          inset 0 1px 0 rgba(225,245,255,.18),
+          inset 0 -1px 0 rgba(0,0,0,.10)
+        `
+      : `
+          0 18px 45px rgba(55,85,115,.13),
+          0 4px 14px rgba(55,85,115,.07),
+          inset 0 1px 0 rgba(255,255,255,.75),
+          inset 0 -1px 0 rgba(90,130,160,.08)
+        `,
+  };
+
+  /* ======================================================
+     MOBILE
+  ====================================================== */
+
+  if (mobile) {
+    return (
+      <>
+        <motion.nav
+          initial={false}
+          animate={{
+            y: navVisible || menuOpen ? 0 : -100,
+            opacity: navVisible || menuOpen ? 1 : 0,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 360,
+            damping: 34,
+            mass: 0.8,
+          }}
+          style={{
+            ...glass,
+
+            scale: menuOpen ? 1 : mobileScale,
+
+            position: "fixed",
+            top: 18,
+            left: "50%",
+
+            /*
+              x replaces translateX(-50%) because this is
+              now a Motion component.
+            */
+            x: "-50%",
+
+            width: "calc(100% - 32px)",
+            maxWidth: 430,
+            height: 64,
+
+            borderRadius: 999,
+
+            color: dark
+              ? "#F7FBFF"
+              : "#102A43",
+
+            overflow: "hidden",
+
+            transformOrigin: "top center",
+
+            zIndex: 101,
+          }}
         >
-          <img
-            src="/NavBar-BG.png"
-            alt=""
-            className="navbar-background"
-          />
+          <GlassReflections dark={dark} />
 
-          <div className="navbar-dark-overlay" />
-          <div className="navbar-glass-highlight" />
-          <div className="navbar-inner-border" />
+          <div
+            style={{
+              position: "relative",
 
-          <div className="mobile-navbar-content">
-            {/* MOBILE PROFILE */}
-            <Link
-              href="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="mobile-profile-section"
+              height: "100%",
+
+              display: "grid",
+              gridTemplateColumns:
+                "56px 1fr 56px",
+
+              alignItems: "center",
+
+              padding: "0 8px",
+
+              zIndex: 2,
+            }}
+          >
+            <div />
+
+            <span
+              style={{
+                textAlign: "center",
+
+                fontSize: 17,
+                fontWeight: 600,
+
+                letterSpacing: ".01em",
+              }}
             >
-              <div className="profile-container">
-                <Image
-                  src="/Profile.png"
-                  alt="Moises Gonzalez"
-                  fill
-                  sizes="52px"
-                  priority
-                  className="profile-image"
-                />
-              </div>
+              {currentName}
+            </span>
 
-              <span className="mobile-navbar-name">
-                Moises Gonzalez
-              </span>
-            </Link>
-
-            {/* HAMBURGER */}
-            <button
-              type="button"
-              aria-label={
-                mobileMenuOpen
-                  ? "Close navigation menu"
-                  : "Open navigation menu"
-              }
-              aria-expanded={mobileMenuOpen}
+            <Hamburger
+              open={menuOpen}
               onClick={() =>
-                setMobileMenuOpen((open) => !open)
+                setMenuOpen((open) => !open)
               }
-              className="hamburger-button"
-            >
-              <div className="hamburger">
-                <motion.span
-                  animate={{
-                    rotate: mobileMenuOpen ? 45 : 0,
-                    y: mobileMenuOpen ? 9 : 0,
-                  }}
-                  transition={{
-                    duration: 0.25,
-                  }}
-                />
-
-                <motion.span
-                  animate={{
-                    opacity: mobileMenuOpen ? 0 : 1,
-                    scaleX: mobileMenuOpen ? 0 : 1,
-                  }}
-                  transition={{
-                    duration: 0.2,
-                  }}
-                />
-
-                <motion.span
-                  animate={{
-                    rotate: mobileMenuOpen ? -45 : 0,
-                    y: mobileMenuOpen ? -9 : 0,
-                  }}
-                  transition={{
-                    duration: 0.25,
-                  }}
-                />
-              </div>
-            </button>
+            />
           </div>
-        </div>
+        </motion.nav>
 
-        {/* MOBILE DROPDOWN */}
+        {/* FULL-SCREEN MOBILE MENU */}
+
         <AnimatePresence>
-          {mobileMenuOpen && (
+          {menuOpen && (
             <motion.div
-              className="mobile-dropdown"
               initial={{
                 opacity: 0,
-                y: -8,
               }}
               animate={{
                 opacity: 1,
-                y: 0,
               }}
               exit={{
                 opacity: 0,
-                y: -8,
               }}
               transition={{
-                duration: 0.22,
-                ease: "easeOut",
+                duration: 0.28,
+              }}
+              style={{
+                position: "fixed",
+                inset: 0,
+
+                width: "100%",
+                height: "100dvh",
+
+                background: dark
+                  ? `
+                      linear-gradient(
+                        145deg,
+                        rgba(3,18,39,.86),
+                        rgba(7,35,65,.78)
+                      )
+                    `
+                  : `
+                      linear-gradient(
+                        145deg,
+                        rgba(242,249,255,.88),
+                        rgba(213,235,249,.78)
+                      )
+                    `,
+
+                backdropFilter:
+                  "blur(30px) saturate(160%)",
+
+                WebkitBackdropFilter:
+                  "blur(30px) saturate(160%)",
+
+                color: dark
+                  ? "#F7FBFF"
+                  : "#102A43",
+
+                overflow: "hidden",
+
+                zIndex: 100,
               }}
             >
-              <img
-                src="/NavBar-BG.png"
-                alt=""
-                className="dropdown-background"
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  scale: 0.8,
+                }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                }}
+                transition={{
+                  duration: 0.5,
+                }}
+                style={{
+                  position: "absolute",
+
+                  top: "-15%",
+                  left: "-15%",
+
+                  width: "80vw",
+                  height: "50vh",
+
+                  borderRadius: "50%",
+
+                  background: dark
+                    ? "rgba(40,140,220,.13)"
+                    : "rgba(255,255,255,.50)",
+
+                  filter: "blur(70px)",
+
+                  pointerEvents: "none",
+                }}
               />
 
-              <div className="dropdown-dark-overlay" />
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  scale: 0.8,
+                }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                }}
+                transition={{
+                  duration: 0.6,
+                }}
+                style={{
+                  position: "absolute",
 
-              <div className="dropdown-content">
-                {/* MOBILE LINKS */}
-                {navLinks.map((link) => {
-                  const isActive = pathname === link.href;
+                  right: "-25%",
+                  bottom: "-15%",
+
+                  width: "80vw",
+                  height: "55vh",
+
+                  borderRadius: "50%",
+
+                  background: dark
+                    ? "rgba(40,110,180,.10)"
+                    : "rgba(130,205,245,.20)",
+
+                  filter: "blur(80px)",
+
+                  pointerEvents: "none",
+                }}
+              />
+
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+
+                  display: "flex",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                  justifyContent: "center",
+
+                  gap: 12,
+
+                  padding:
+                    "100px 24px 40px",
+                }}
+              >
+                {links.map((link, index) => {
+                  const isActive =
+                    index === active;
 
                   return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() =>
-                        setMobileMenuOpen(false)
-                      }
-                      className={`mobile-nav-link ${
-                        isActive
-                          ? "mobile-nav-link-active"
-                          : ""
-                      }`}
-                    >
-                      <span>{link.name}</span>
+                    <motion.div
+                      key={link.name}
+                      initial={{
+                        opacity: 0,
+                        y: 28,
+                        scale: 0.96,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                      }}
+                      exit={{
+                        opacity: 0,
+                        y: 14,
+                      }}
+                      transition={{
+                        delay:
+                          0.05 +
+                          index * 0.055,
 
-                      {isActive && (
-                        <span className="mobile-active-dot" />
-                      )}
-                    </Link>
+                        duration: 0.36,
+
+                        ease: [
+                          0.22,
+                          1,
+                          0.36,
+                          1,
+                        ],
+                      }}
+                    >
+                      <Link
+                        href={link.href}
+                        onClick={() =>
+                          setMenuOpen(false)
+                        }
+                        style={{
+                          position: "relative",
+
+                          minWidth: 220,
+                          height: 64,
+
+                          display: "flex",
+
+                          alignItems: "center",
+                          justifyContent:
+                            "center",
+
+                          color: "inherit",
+
+                          textDecoration:
+                            "none",
+
+                          fontSize: 30,
+                          lineHeight: 1,
+
+                          fontWeight:
+                            isActive
+                              ? 650
+                              : 500,
+
+                          letterSpacing:
+                            "-.02em",
+
+                          opacity:
+                            isActive
+                              ? 1
+                              : 0.72,
+                        }}
+                      >
+                        {link.name}
+
+                        {isActive && (
+                          <motion.span
+                            layoutId="mobile-active-line"
+                            style={{
+                              position:
+                                "absolute",
+
+                              bottom: 5,
+                              left: "50%",
+
+                              width: 46,
+                              height: 3,
+
+                              borderRadius: 99,
+
+                              background:
+                                dark
+                                  ? "#68D5FF"
+                                  : "#1689C9",
+
+                              boxShadow:
+                                dark
+                                  ? `
+                                      0 0 5px rgba(104,213,255,.9),
+                                      0 0 12px rgba(60,185,255,.35)
+                                    `
+                                  : "0 0 5px rgba(22,137,201,.25)",
+
+                              transform:
+                                "translateX(-50%)",
+                            }}
+                          />
+                        )}
+                      </Link>
+                    </motion.div>
                   );
                 })}
-
-                <div className="mobile-divider" />
-
-                {/* MOBILE RESUME */}
-                <Link
-                  href="/resume.pdf"
-                  target="_blank"
-                  onClick={() =>
-                    setMobileMenuOpen(false)
-                  }
-                  className="mobile-resume-button"
-                >
-                  Resume
-
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="17"
-                    height="17"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 3v12" />
-                    <path d="m7 10 5 5 5-5" />
-                    <path d="M5 21h14" />
-                  </svg>
-                </Link>
-
-                {/* MOBILE THEME */}
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  aria-label={
-                    theme === "light"
-                      ? "Switch to dark mode"
-                      : "Switch to light mode"
-                  }
-                  className="mobile-theme-button"
-                >
-                  {theme === "light" ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="4" />
-                      <path d="M12 2v2" />
-                      <path d="M12 20v2" />
-                      <path d="m4.93 4.93 1.41 1.41" />
-                      <path d="m17.66 17.66 1.41 1.41" />
-                      <path d="M2 12h2" />
-                      <path d="M20 12h2" />
-                      <path d="m6.34 17.66-1.41 1.41" />
-                      <path d="m19.07 4.93-1.41 1.41" />
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-                    </svg>
-                  )}
-
-                  {theme === "light" ? "Dark Mode" : "Light Mode"}
-                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+      </>
+    );
+  }
+
+  /* ======================================================
+     DESKTOP
+  ====================================================== */
+
+  return (
+    <motion.nav
+      initial={false}
+      animate={{
+        y: navVisible ? 0 : -115,
+        opacity: navVisible ? 1 : 0,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 360,
+        damping: 34,
+        mass: 0.8,
+      }}
+      style={{
+        ...glass,
+
+        /*
+          Gradually shrinks during the first 140px.
+        */
+        scale: desktopScale,
+
+        position: "fixed",
+
+        top: 24,
+        left: "50%",
+
+        /*
+          Motion x instead of CSS transform so scale and
+          translate don't fight each other.
+        */
+        x: "-50%",
+
+        width: "88%",
+        height: 80,
+
+        borderRadius: 999,
+
+        overflow: "hidden",
+
+        color: dark
+          ? "#F7FBFF"
+          : "#102A43",
+
+        display: "flex",
+
+        alignItems: "center",
+        justifyContent: "center",
+
+        transformOrigin: "top center",
+
+        zIndex: 50,
+      }}
+    >
+      <GlassReflections dark={dark} />
+
+      <div
+        ref={navRef}
+        style={{
+          position: "relative",
+
+          width: 680,
+          maxWidth: "84%",
+          height: 60,
+
+          display: "grid",
+
+          gridTemplateColumns:
+            `repeat(${links.length}, 1fr)`,
+
+          alignItems: "center",
+
+          zIndex: 2,
+        }}
+      >
+        {geometry.length === links.length &&
+          visualActive >= 0 && (
+            <ECGAnimation
+              geometry={geometry}
+              navSize={navSize}
+              activeIndex={visualActive}
+              animateECG={
+                animating !== null
+              }
+              animationKey={
+                animationKey
+              }
+              isDark={dark}
+            />
+          )}
+
+        {links.map((link, index) => {
+          const isActive =
+            index === active;
+
+          const isAnimating =
+            index === animating;
+
+          const isHovered =
+            index === hovered;
+
+          const showHover =
+            isHovered &&
+            !isActive &&
+            !isAnimating &&
+            animating === null;
+
+          return (
+            <Link
+              key={link.name}
+              href={link.href}
+              onMouseEnter={() =>
+                animating === null &&
+                setHovered(index)
+              }
+              onMouseLeave={() =>
+                setHovered(null)
+              }
+              onMouseDown={() =>
+                setHovered(null)
+              }
+              onClick={() =>
+                playECG(index)
+              }
+              style={{
+                position: "relative",
+
+                height: 60,
+
+                display: "flex",
+
+                alignItems: "center",
+                justifyContent: "center",
+
+                color: "inherit",
+
+                textDecoration: "none",
+
+                zIndex: 5,
+              }}
+            >
+              <span
+                ref={(el) => {
+                  textRefs.current[index] =
+                    el;
+                }}
+                style={{
+                  position: "relative",
+
+                  display:
+                    "inline-block",
+
+                  fontSize: 17,
+                  lineHeight: 1,
+
+                  fontWeight:
+                    isActive
+                      ? 600
+                      : 500,
+
+                  letterSpacing:
+                    ".01em",
+
+                  opacity:
+                    isActive ||
+                    isAnimating ||
+                    isHovered
+                      ? 1
+                      : 0.72,
+
+                  whiteSpace: "nowrap",
+
+                  transition:
+                    "opacity .2s ease",
+                }}
+              >
+                {link.name}
+
+                <motion.span
+                  aria-hidden
+                  initial={false}
+                  animate={{
+                    scaleX:
+                      showHover
+                        ? 1
+                        : 0,
+
+                    opacity:
+                      showHover
+                        ? 1
+                        : 0,
+                  }}
+                  transition={{
+                    scaleX: {
+                      duration:
+                        showHover
+                          ? 0.22
+                          : 0.04,
+
+                      ease:
+                        showHover
+                          ? [
+                              0.22,
+                              1,
+                              0.36,
+                              1,
+                            ]
+                          : "easeOut",
+                    },
+
+                    opacity: {
+                      duration:
+                        showHover
+                          ? 0.1
+                          : 0.025,
+                    },
+                  }}
+                  style={{
+                    position: "absolute",
+
+                    left: -LINE_PAD,
+                    right: -LINE_PAD,
+                    bottom: -LINE_OFFSET,
+
+                    height: 3,
+
+                    borderRadius: 99,
+
+                    background:
+                      dark
+                        ? "#68D5FF"
+                        : "#1689C9",
+
+                    boxShadow:
+                      dark
+                        ? `
+                            0 0 4px rgba(104,213,255,.95),
+                            0 0 9px rgba(60,185,255,.35)
+                          `
+                        : "0 0 4px rgba(22,137,201,.35)",
+
+                    transformOrigin:
+                      "center",
+
+                    pointerEvents:
+                      "none",
+                  }}
+                />
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </motion.nav>
   );
 }
+
+/* =========================================================
+   HAMBURGER
+========================================================= */
+
+function Hamburger({
+  open,
+  onClick,
+}: {
+  open: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={
+        open
+          ? "Close menu"
+          : "Open menu"
+      }
+      aria-expanded={open}
+      onClick={onClick}
+      style={{
+        width: 48,
+        height: 48,
+
+        border: 0,
+        padding: 0,
+
+        background: "transparent",
+        color: "inherit",
+
+        cursor: "pointer",
+
+        display: "grid",
+        placeItems: "center",
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: 24,
+          height: 18,
+        }}
+      >
+        <motion.span
+          animate={{
+            y: open ? 8 : 0,
+            rotate: open ? 45 : 0,
+          }}
+          transition={hamburgerTransition}
+          style={hamburgerLine}
+        />
+
+        <motion.span
+          animate={{
+            opacity: open ? 0 : 1,
+            scaleX: open ? 0 : 1,
+          }}
+          transition={{
+            duration: 0.15,
+          }}
+          style={{
+            ...hamburgerLine,
+            top: 8,
+          }}
+        />
+
+        <motion.span
+          animate={{
+            y: open ? -8 : 0,
+            rotate: open ? -45 : 0,
+          }}
+          transition={hamburgerTransition}
+          style={{
+            ...hamburgerLine,
+            top: 16,
+          }}
+        />
+      </div>
+    </button>
+  );
+}
+
+/* =========================================================
+   GLASS REFLECTIONS
+========================================================= */
+
+function GlassReflections({
+  dark,
+}: {
+  dark: boolean;
+}) {
+  return (
+    <>
+      <div
+        style={{
+          position: "absolute",
+
+          top: -58,
+          left: "5%",
+
+          width: "68%",
+          height: 100,
+
+          borderRadius: "50%",
+
+          background:
+            dark
+              ? "rgba(210,240,255,.10)"
+              : "rgba(255,255,255,.40)",
+
+          filter: "blur(27px)",
+
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+
+          top: -32,
+          right: "7%",
+
+          width: "30%",
+          height: 62,
+
+          borderRadius: "50%",
+
+          background:
+            dark
+              ? "rgba(125,205,255,.065)"
+              : "rgba(205,238,255,.25)",
+
+          filter: "blur(22px)",
+
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+
+          top: 1,
+          left: "5%",
+          right: "5%",
+
+          height: 1,
+
+          background: `linear-gradient(
+            90deg,
+            transparent,
+            ${
+              dark
+                ? "rgba(225,245,255,.22)"
+                : "rgba(255,255,255,.85)"
+            },
+            transparent
+          )`,
+
+          opacity: 0.75,
+
+          pointerEvents: "none",
+        }}
+      />
+    </>
+  );
+}
+
+/* =========================================================
+   STYLES
+========================================================= */
+
+const hamburgerLine: CSSProperties = {
+  position: "absolute",
+
+  top: 0,
+  left: 0,
+
+  width: 24,
+  height: 2,
+
+  borderRadius: 99,
+
+  background: "currentColor",
+
+  transformOrigin: "center",
+};
+
+const hamburgerTransition = {
+  duration: 0.25,
+
+  ease: [
+    0.22,
+    1,
+    0.36,
+    1,
+  ] as [
+    number,
+    number,
+    number,
+    number,
+  ],
+};
