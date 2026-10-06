@@ -61,7 +61,7 @@ export default function Home() {
 
               <div className="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
                 <Link
-                  href="/projects"
+                  href="/builds"
                   className="rounded-full bg-sky-700 px-6 py-3 font-semibold text-white transition hover:bg-sky-800 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
                 >
                   Explore My Work
@@ -157,7 +157,7 @@ export default function Home() {
             </div>
 
             <Link
-              href="/projects"
+              href="/builds"
               className="font-semibold text-sky-700 transition hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-300"
             >
               View all projects →

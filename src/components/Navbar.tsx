@@ -362,18 +362,23 @@ export default function Navbar() {
           >
             <div />
 
-            <span
+            <Link
+              href="/"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Go to home page"
               style={{
+                justifySelf: "center",
                 textAlign: "center",
-
                 fontSize: 17,
                 fontWeight: 600,
-
                 letterSpacing: ".01em",
+                color: "inherit",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
               }}
             >
-              {currentName}
-            </span>
+              Moises Gonzalez
+            </Link>
 
             <Hamburger
               open={menuOpen}
@@ -818,8 +823,8 @@ export default function Navbar() {
 
                   opacity:
                     isActive ||
-                    isAnimating ||
-                    isHovered
+                      isAnimating ||
+                      isHovered
                       ? 1
                       : 0.72,
 
@@ -855,11 +860,11 @@ export default function Navbar() {
                       ease:
                         showHover
                           ? [
-                              0.22,
-                              1,
-                              0.36,
-                              1,
-                            ]
+                            0.22,
+                            1,
+                            0.36,
+                            1,
+                          ]
                           : "easeOut",
                     },
 
@@ -1063,10 +1068,9 @@ function GlassReflections({
           background: `linear-gradient(
             90deg,
             transparent,
-            ${
-              dark
-                ? "rgba(225,245,255,.22)"
-                : "rgba(255,255,255,.85)"
+            ${dark
+              ? "rgba(225,245,255,.22)"
+              : "rgba(255,255,255,.85)"
             },
             transparent
           )`,
@@ -1109,9 +1113,9 @@ const hamburgerTransition = {
     0.36,
     1,
   ] as [
-    number,
-    number,
-    number,
-    number,
-  ],
+      number,
+      number,
+      number,
+      number,
+    ],
 };

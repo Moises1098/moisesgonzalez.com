@@ -87,18 +87,17 @@ export default function Aboutme() {
 
               <div className="mt-8 flex flex-wrap justify-center gap-4 xl:justify-start">
                 <Link
-                  href="/projects"
+                  href="/builds"
                   className="rounded-full bg-sky-700 px-6 py-3 font-semibold text-white transition hover:bg-sky-800 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
                 >
                   Explore My Work
                 </Link>
 
                 <Link
-                  href="/resume.pdf"
-                  target="_blank"
+                  href="/resume"
                   className="rounded-full border border-slate-400 bg-white/30 px-6 py-3 font-semibold text-slate-800 transition hover:bg-white/60 dark:border-slate-600 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10"
                 >
-                  View Resume
+                  View My Resume
                 </Link>
               </div>
             </div>

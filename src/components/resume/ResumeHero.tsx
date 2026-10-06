@@ -5,7 +5,7 @@ export default function ResumeHero() {
     <section className="px-6 pb-10 pt-44 md:px-10">
       <div className="mx-auto max-w-6xl text-center">
         <a
-          href="/Moises-Gonzalez-Resume.pdf"
+          href="/MoisesGonzalez_Resume.pdf"
           download
           aria-label="Download PDF resume"
           className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/5 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600 transition-all duration-200 hover:border-cyan-500/50 hover:bg-cyan-500/10 dark:border-cyan-400/25 dark:bg-cyan-400/5 dark:text-cyan-400 dark:hover:border-cyan-400/50 dark:hover:bg-cyan-400/10"
