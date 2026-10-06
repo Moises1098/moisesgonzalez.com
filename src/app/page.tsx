@@ -9,7 +9,7 @@ const interests = [
   {
     number: "02",
     title: "Technology",
-    text: "I enjoy building with technology through web development, electronics, 3D printing, and projects that combine software with physical design.",
+    text: "I enjoy building with technology through web development, small electronics, 3D printing, and projects that combine software with some physical design.",
   },
   {
     number: "03",
@@ -21,8 +21,8 @@ const interests = [
 const projects = [
   {
     category: "Web Development",
-    title: "Project Name",
-    text: "Add a short description explaining what you built, why you built it, and the technologies involved.",
+    title: "L******l",
+    text: "Currently a work in progress of an online store front for 3D printed small signs ranging from different PETG filament colors to ws LED embeded lights for a colorfull and brighter experience.",
   },
   {
     category: "Creative Technology",
@@ -37,7 +37,7 @@ const card =
 export default function Home() {
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors duration-500">
-      <section className="px-6 pb-28 pt-44">
+      <section className="px-6 pb-28 pt-44 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col items-center gap-10 text-center md:flex-row md:items-center md:justify-between md:gap-16 md:text-left">
             <div className="max-w-4xl">
@@ -46,7 +46,7 @@ export default function Home() {
               </p>
 
               <h1 className="text-5xl font-bold tracking-tight text-sky-800 transition-colors duration-500 md:text-6xl lg:text-7xl dark:text-sky-300">
-                Hi, I&apos;m Moises Gonzalez.
+                Hi, I'm Moises Gonzalez.
               </h1>
 
               <h2 className="mt-6 text-2xl font-semibold text-slate-800 dark:text-slate-100">
@@ -54,10 +54,9 @@ export default function Home() {
               </h2>
 
               <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-700 md:mx-0 dark:text-slate-300">
-                I&apos;m a multidisciplinary creator with interests spanning
+                Since a young age I have always had a creative mind with the affinity to learn and create. I have interests spanning
                 science, medicine, technology, and the performing arts. I enjoy
-                learning across different fields and building projects that
-                bring those interests together.
+                researching and learning across different fields and building, that build and compliment each other. I am currently pursuing a career in medicine while also exploring my interests in web development and creative technology.
               </p>
 
               <div className="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
@@ -105,12 +104,18 @@ export default function Home() {
               Curiosity doesn&apos;t fit into one discipline.
             </h2>
 
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-700 dark:text-slate-300">
-              My interests may look different on the surface, but they&apos;re
-              connected by the same thing: curiosity. I enjoy understanding how
-              things work, creating new things, and exploring ideas from
-              different perspectives.
+            <p className="mx-auto mt-10 max-w-2xl text-lg italic leading-8 text-slate-600 dark:text-slate-400">
+              &ldquo;Curiosity killed the cat, but satisfaction brought it back.&rdquo;
             </p>
+
+            <Link
+              href="https://www.phrases.org.uk/meanings/curiosity-killed-the-cat.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-sm text-slate-500 transition-colors hover:text-sky-600 dark:text-slate-500 dark:hover:text-sky-300"
+            >
+              — The Titusville Herald, 1912
+            </Link>
           </div>
 
           <div className="mt-16 grid gap-6 md:grid-cols-3">

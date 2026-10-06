@@ -3,27 +3,16 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 
-/* =========================
-   LIGHT MODE
-========================= */
-
 :root {
   --background: #e8eef5;
   --foreground: #171717;
-
-  color-scheme: light;
+  --cta-background: #0f172a;
 }
-
-
-/* =========================
-   DARK MODE
-========================= */
 
 html.dark {
   --background: #030a12;
   --foreground: #ededed;
-
-  color-scheme: dark;
+  --cta-background: #0b1b35;
 }
 
 
