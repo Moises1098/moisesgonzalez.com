@@ -26,8 +26,6 @@ export default function Research() {
         <div className="mx-auto max-w-6xl">
           <div className="max-w-4xl">
             <div className="flex items-center gap-3">
-              <span className="h-px w-8 bg-cyan-500/60" />
-
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-400">
                 Research
               </p>
