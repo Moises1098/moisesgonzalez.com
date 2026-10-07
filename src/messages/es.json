@@ -1,0 +1,23 @@
+
+{
+  "navigation": {
+    "home": "Inicio",
+    "about": "Sobre mí",
+    "builds": "Proyectos",
+    "research": "Investigaciónes",
+    "resume": "Currículum"
+  },
+  "settings": {
+    "title": "Configuración",
+    "appearance": "Apariencia",
+    "english": "Inglés",
+    "spanish": "Español",
+    "french": "Francés"
+  },
+  "common": {
+    "learnMore": "Conoce más",
+    "viewProject": "Ver proyecto",
+    "downloadResume": "Descargar currículum",
+    "currentlyBuilding": "Proyectos en construcción"
+  }
+}

@@ -1,4 +1,8 @@
+"use client";
+
+import { useRef, useState } from "react";
 import Link from "next/link";
+import { animate, motion, useMotionValue } from "motion/react";
 
 const interests = [
   {
@@ -20,19 +24,18 @@ const interests = [
 
 const projects = [
   {
-    category: "Web Development",
-    title: "L******l",
-    text: "Currently a work in progress of an online store front for 3D printed small signs ranging from different PETG filament colors to ws LED embeded lights for a colorfull and brighter experience.",
-  },
-  {
-    category: "Creative Technology",
-    title: "Project Name",
-    text: "Use this space for another project that represents a different side of your technical or creative work.",
+    category: "Web Development · In Development",
+    title: "Project Title",
+    text: "An online storefront currently in development for custom 3D-printed signs, combining colorful PETG designs with addressable LED lighting for a more personalized and vibrant experience.",
+    images: [
+      "/currentbuilds/storefront/home.png",
+      "/currentbuilds/storefront/shop.png",
+    ],
   },
 ];
 
 const card =
-  "rounded-3xl border border-white/60 bg-white/30 shadow-sm transition-colors duration-500 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/20";
+  "rounded-3xl border border-slate-200/80 bg-white/30 shadow-sm transition-colors duration-500 dark:border-white/10 dark:bg-white/[0.035] dark:shadow-black/20";
 
 export default function Home() {
   return (
@@ -41,35 +44,38 @@ export default function Home() {
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col items-center gap-10 text-center md:flex-row md:items-center md:justify-between md:gap-16 md:text-left">
             <div className="max-w-4xl">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-400">
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-400">
                 Science • Technology • Creativity
               </p>
 
-              <h1 className="text-5xl font-bold tracking-tight text-sky-800 transition-colors duration-500 md:text-6xl lg:text-7xl dark:text-sky-300">
-                Hi, I'm Moises Gonzalez.
+              <h1 className="text-5xl font-bold tracking-tight text-slate-900 transition-colors duration-500 md:text-6xl lg:text-7xl dark:text-white">
+                Hi, I&apos;m Moises Gonzalez.
               </h1>
 
-              <h2 className="mt-6 text-2xl font-semibold text-slate-800 dark:text-slate-100">
+              <h2 className="mt-6 text-2xl font-semibold text-sky-700 dark:text-sky-200">
                 Biology, web development, and creative technology.
               </h2>
 
-              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-700 md:mx-0 dark:text-slate-300">
-                Since a young age I have always had a creative mind with the affinity to learn and create. I have interests spanning
-                science, medicine, technology, and the performing arts. I enjoy
-                researching and learning across different fields and building, that build and compliment each other. I am currently pursuing a career in medicine while also exploring my interests in web development and creative technology.
+              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600 md:mx-0 dark:text-slate-400">
+                From a young age, I've had a creative mind and an affinity for learning and creating. I have interests spanning science,
+                medicine, technology, and the performing arts. I enjoy
+                researching and learning across different fields and building,
+                that build and compliment each other. I am currently pursuing a
+                career in medicine while also exploring my interests in web
+                development and creative technology.
               </p>
 
               <div className="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
                 <Link
                   href="/builds"
-                  className="rounded-full bg-sky-700 px-6 py-3 font-semibold text-white transition hover:bg-sky-800 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                  className="rounded-full bg-sky-700 px-6 py-3 font-semibold text-white transition hover:bg-sky-800 dark:bg-sky-300 dark:text-slate-950 dark:hover:bg-sky-200"
                 >
                   Explore My Work
                 </Link>
 
                 <Link
                   href="/about"
-                  className="rounded-full border border-slate-400 bg-white/30 px-6 py-3 font-semibold text-slate-800 transition hover:bg-white/60 dark:border-slate-600 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10"
+                  className="rounded-full border border-slate-300 bg-white/20 px-6 py-3 font-semibold text-slate-800 transition hover:border-sky-400 hover:text-sky-700 dark:border-white/15 dark:bg-white/[0.035] dark:text-slate-200 dark:hover:border-sky-300/60 dark:hover:text-sky-200"
                 >
                   About Me
                 </Link>
@@ -78,13 +84,13 @@ export default function Home() {
 
             <div className="order-first shrink-0 md:order-last">
               <div className="relative flex h-40 w-40 items-center justify-center rounded-full sm:h-40 sm:w-40 md:h-65 md:w-65 lg:h-75 lg:w-75">
-                <div className="absolute inset-0 rounded-full bg-sky-400/10 blur-xl dark:bg-sky-400/15" />
+                <div className="absolute inset-0 rounded-full bg-sky-400/10 blur-xl dark:bg-sky-300/10" />
 
                 <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-sky-500/40 bg-slate-900 shadow-xl ring-1 ring-sky-400/10 dark:bg-[#020817] dark:shadow-black/30">
                   <img
-                    src="/Profile.png"
+                    src="/home/Profile.png"
                     alt="Moises Gonzalez"
-                    className="h-full w-full scale-[1.7] object-cover object-center -translate-y-[4.5px]"
+                    className="h-full w-full -translate-y-[4.5px] scale-[1.7] object-cover object-center"
                   />
                 </div>
               </div>
@@ -93,19 +99,20 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-6 py-24">
+      <section className="px-6 py-24 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-400">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-400">
               Multidisciplinary by nature
             </p>
 
-            <h2 className="mt-3 text-4xl font-bold tracking-tight text-sky-700 md:text-5xl dark:text-sky-300">
+            <h2 className="mt-3 text-4xl font-bold tracking-tight text-slate-900 md:text-5xl dark:text-white">
               Curiosity doesn&apos;t fit into one discipline.
             </h2>
 
             <p className="mx-auto mt-10 max-w-2xl text-lg italic leading-8 text-slate-600 dark:text-slate-400">
-              &ldquo;Curiosity killed the cat, but satisfaction brought it back.&rdquo;
+              &ldquo;Curiosity killed the cat, but satisfaction brought it
+              back.&rdquo;
             </p>
 
             <Link
@@ -121,7 +128,7 @@ export default function Home() {
           <div className="mt-16 grid gap-6 md:grid-cols-3">
             {interests.map((interest) => (
               <article key={interest.number} className={`${card} p-8`}>
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-700 text-xl font-bold text-white dark:bg-sky-500 dark:text-slate-950">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-700 text-xl font-bold text-white dark:bg-sky-300 dark:text-slate-950">
                   {interest.number}
                 </div>
 
@@ -129,7 +136,7 @@ export default function Home() {
                   {interest.title}
                 </h3>
 
-                <p className="mt-4 leading-7 text-slate-700 dark:text-slate-300">
+                <p className="mt-4 leading-7 text-slate-600 dark:text-slate-400">
                   {interest.text}
                 </p>
               </article>
@@ -138,11 +145,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-6 py-24">
+      <section className="px-6 py-24 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-400">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-400">
                 Selected Work
               </p>
 
@@ -150,7 +157,7 @@ export default function Home() {
                 Featured Projects
               </h2>
 
-              <p className="mt-4 max-w-2xl text-lg text-slate-700 dark:text-slate-300">
+              <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
                 A selection of things I&apos;ve designed, developed, and
                 experimented with.
               </p>
@@ -158,7 +165,7 @@ export default function Home() {
 
             <Link
               href="/builds"
-              className="font-semibold text-sky-700 transition hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-300"
+              className="font-semibold text-sky-700 transition hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-200"
             >
               View all projects →
             </Link>
@@ -166,54 +173,127 @@ export default function Home() {
 
           <div className="mt-12 grid gap-8 md:grid-cols-2">
             {projects.map((project) => (
-              <article
-                key={project.category}
-                className={`${card} overflow-hidden`}
-              >
-                <div className="aspect-[16/9] bg-slate-900 dark:bg-[#020817]" />
-
-                <div className="p-7">
-                  <p className="text-sm font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400">
-                    {project.category}
-                  </p>
-
-                  <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                    {project.title}
-                  </h3>
-
-                  <p className="mt-3 leading-7 text-slate-700 dark:text-slate-300">
-                    {project.text}
-                  </p>
-                </div>
-              </article>
+              <FeaturedProject
+                key={project.title}
+                category={project.category}
+                title={project.title}
+                text={project.text}
+                images={project.images}
+              />
             ))}
           </div>
         </div>
       </section>
-
-      <section className="px-6 pb-28 pt-20">
-        <div className="mx-auto max-w-5xl rounded-[36px] bg-slate-900 px-8 py-16 text-center text-white transition-colors duration-500 md:px-16 dark:border dark:border-white/10 dark:bg-[#0B1B35]">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">
-            Get in touch
-          </p>
-
-          <h2 className="mt-3 text-4xl font-bold tracking-tight">
-            Interested in what I&apos;m working on?
-          </h2>
-
-          <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">
-            Explore my work, learn more about my background, or reach out to
-            connect.
-          </p>
-
-          <Link
-            href="/contact"
-            className="mt-8 inline-block rounded-full bg-white px-7 py-3 font-semibold text-slate-900 transition hover:bg-slate-200 dark:bg-sky-400 dark:text-slate-950 dark:hover:bg-sky-300"
-          >
-            Contact Me
-          </Link>
-        </div>
-      </section>
     </main>
+  );
+}
+
+function FeaturedProject({
+  images,
+  title,
+  category,
+  text,
+}: {
+  images: string[];
+  title: string;
+  category: string;
+  text: string;
+}) {
+  const [current, setCurrent] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+
+  function getWidth() {
+    return carouselRef.current?.offsetWidth ?? 0;
+  }
+
+  function goToImage(index: number) {
+    const width = getWidth();
+
+    setCurrent(index);
+
+    animate(x, -index * width, {
+      duration: 0.35,
+      ease: [0.22, 1, 0.36, 1],
+    });
+  }
+
+  function handleDragEnd() {
+    const width = getWidth();
+
+    if (!width) return;
+
+    const restingPosition = -current * width;
+    const distance = x.get() - restingPosition;
+    const threshold = width * 0.15;
+
+    if (distance < -threshold && current < images.length - 1) {
+      goToImage(current + 1);
+      return;
+    }
+
+    if (distance > threshold && current > 0) {
+      goToImage(current - 1);
+      return;
+    }
+
+    goToImage(current);
+  }
+
+  return (
+    <article className={`${card} overflow-hidden`}>
+      <div
+        ref={carouselRef}
+        className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-white/[0.035]"
+      >
+        <motion.div
+          drag="x"
+          dragMomentum={false}
+          style={{ x }}
+          onDragEnd={handleDragEnd}
+          className="flex h-full cursor-grab touch-pan-y active:cursor-grabbing"
+        >
+          {images.map((image, index) => (
+            <div
+              key={image}
+              className="h-full w-full shrink-0 select-none bg-contain bg-center bg-no-repeat"
+              style={{ backgroundImage: `url("${image}")` }}
+              role="img"
+              aria-label={`${title} preview ${index + 1}`}
+            />
+          ))}
+        </motion.div>
+
+        <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-black/20 px-3 py-2 backdrop-blur-md">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => goToImage(index)}
+              aria-label={`View image ${index + 1}`}
+              className={`h-2 w-2 rounded-full transition-opacity duration-200 ${
+                current === index
+                  ? "bg-white"
+                  : "bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="p-7">
+        <p className="text-sm font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+          {category}
+        </p>
+
+        <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+          {title}
+        </h3>
+
+        <p className="mt-3 leading-7 text-slate-600 dark:text-slate-400">
+          {text}
+        </p>
+      </div>
+    </article>
   );
 }

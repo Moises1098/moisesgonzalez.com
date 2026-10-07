@@ -1,9 +1,13 @@
+
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
+
 import Navbar from "@/components/Navbar";
 import LightandDarkmode from "@/components/LightandDarkmode";
-import ThemeToggle from "@/components/ThemeToggle";
+import LanguageProvider from "@/components/LanguageProvider";
+import FloatingControls from "@/components/FloatingControls";
 import Footer from "@/components/Footer";
+
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -17,19 +21,19 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/favicon-96x96.png",
+        url: "/favicon/favicon-96x96.png",
         sizes: "96x96",
         type: "image/png",
       },
       {
-        url: "/favicon.svg",
+        url: "/favicon/favicon.svg",
         type: "image/svg+xml",
       },
     ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon/favicon.ico",
+    apple: "/favicon/apple-touch-icon.png",
   },
-  manifest: "/site.webmanifest",
+  manifest: "/favicon/site.webmanifest",
 };
 
 export default function RootLayout({
@@ -45,12 +49,12 @@ export default function RootLayout({
     >
       <body>
         <LightandDarkmode>
-          <Navbar />
-
-          {children}
-
-          <Footer />
-          <ThemeToggle />
+          <LanguageProvider>
+            <Navbar />
+            {children}
+            <Footer />
+            <FloatingControls />
+          </LanguageProvider>
         </LightandDarkmode>
       </body>
     </html>

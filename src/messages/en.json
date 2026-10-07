@@ -1,0 +1,23 @@
+
+{
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "builds": "Builds",
+    "research": "Research",
+    "resume": "Resume"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "english": "English",
+    "spanish": "Spanish",
+    "french": "French"
+  },
+  "common": {
+    "learnMore": "Learn More",
+    "viewProject": "View Project",
+    "downloadResume": "Download Resume",
+    "currentlyBuilding": "Currently Building"
+  }
+}

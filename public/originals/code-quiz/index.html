@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Quiz</title>
+</head>
+
+<body>
+    <header>
+        <div id="header">View Highscores</div> 
+        <div class="card-timer">
+        <p>Time: <span id="timer-count">0</span></p>
+        </div>
+    </header>
+            
+
+
+
+    <section id="intro" class="disappear">
+        <h1 id="quiz-title" class="disappear">Coding Quiz Challenge</h1>
+        <p id="quiz-caption" class="disappear">
+        Try to answer the following code related questions within the time <br>
+        limit. Keep in mind that incorrect answers will penalize your score/time<br>
+        by ten seconds!
+        </p>
+        <button id="start-btn">Start Quiz</button>
+   </section>
+
+   <section class="container">
+       <div id="question-container" class="hide">
+           <div id="question">Question</div>
+           <div id="answer-buttons" class="btn-group">
+               <button class="btn">Answer 1</button>
+               <button class="btn">Answer 2</button>
+               <button class="btn">Answer 3</button>
+               <button class="btn">Answer 4</button>
+           </div>
+           <div id="right" class="answer hide">
+               ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+               <br>
+               <div class="an-style">Right!</div>
+            
+            </div>
+           <div id="wrong" class="answer hide">
+            ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+            <br>
+            <div class="an-style">Wrong!</div>
+           </div>
+       </div>
+    </section>
+
+    <section id="all-done" class="hide">
+        <div>
+            <h1>All Done!</h1>
+            <p>Your final score is <span id="score-count">0</span>.</p> 
+        </div>
+
+        <div class="card">
+            <h1>All Done</h1>
+            <form id="inital-form" method="POST">
+              <label for="inital-text">Enter initals: </label>
+              <input type="text" placeholder="AB" name="inital-text" id="inital-text" />
+              <input type="submit" id="submit" value="Submit">
+            </form>
+        </div>   
+    
+        
+       </div>
+
+
+    </section>
+
+    <section id="highscores" class="hide">
+        <div>
+            <h1>Highscores</h1> 
+        </div>
+        <ol id="highscore-list"></ol>
+        <button id="home-btn">Home</button>
+        
+
+
+
+        
+    </section>
+ 
+        
+
+    
+
+
+
+
+
+
+
+
+
+    <link rel="stylesheet" href="./assets/style.css">
+    <script src="./assets/script.js"></script>
+</body>
+</html>
