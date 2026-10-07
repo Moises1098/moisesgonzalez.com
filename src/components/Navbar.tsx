@@ -453,54 +453,30 @@ export default function Navbar() {
               >
                 {link.name}
 
-                {isActive && (
-                  <motion.span
-                    layoutId="desktop-active-underline"
-                    transition={{
-                      type: "spring",
-                      stiffness: 380,
-                      damping: 32,
-                    }}
-                    style={{
-                      position: "absolute",
-                      left: -6,
-                      right: -6,
-                      bottom: -10,
-                      height: 3,
-                      borderRadius: 99,
-                      background: underlineColor,
-                      boxShadow: underlineShadow,
-                      pointerEvents: "none",
-                    }}
-                  />
-                )}
-
-                {!isActive && (
-                  <motion.span
-                    aria-hidden
-                    initial={false}
-                    animate={{
-                      scaleX: isHovered ? 1 : 0,
-                      opacity: isHovered ? 1 : 0,
-                    }}
-                    transition={{
-                      duration: 0.2,
-                      ease: "easeOut",
-                    }}
-                    style={{
-                      position: "absolute",
-                      left: -6,
-                      right: -6,
-                      bottom: -10,
-                      height: 3,
-                      borderRadius: 99,
-                      background: underlineColor,
-                      boxShadow: underlineShadow,
-                      transformOrigin: "center",
-                      pointerEvents: "none",
-                    }}
-                  />
-                )}
+                <motion.span
+                  aria-hidden
+                  initial={false}
+                  animate={{
+                    scaleX: isActive || isHovered ? 1 : 0,
+                    opacity: isActive || isHovered ? 1 : 0,
+                  }}
+                  transition={{
+                    duration: 0.22,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  style={{
+                    position: "absolute",
+                    left: -6,
+                    right: -6,
+                    bottom: -10,
+                    height: 3,
+                    borderRadius: 99,
+                    background: underlineColor,
+                    boxShadow: underlineShadow,
+                    transformOrigin: "center",
+                    pointerEvents: "none",
+                  }}
+                />
               </span>
             </Link>
           );
